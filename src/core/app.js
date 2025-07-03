@@ -1,21 +1,21 @@
 const express = require('express');
 const contentType = require('content-type');
 const getRawBody = require('raw-body');
-const mainRouter = require('./app.routes');
-const { successHandler, errorHandler } = require('./middlewares/responseHandlers');
-const httpStatusCodes = require('../utils/httpStatusCodes');
+const appRoutes = require('./app.routes');
+const AppController = require('./app.controller');
 
 class App {
   constructor() {
     this.app = express();
     this.initializeMiddlewares();
     this.initializeRoutes();
-    this.initializeResponseHandlers();
+    this.initializeErrorAndNotFoundHandlers();
   }
 
   initializeMiddlewares() {
     this.app.use(express.json({ limit: '1mb' }));
 
+    // Global raw body parser for POST/PUT/DELETE requests
     this.app.use((req, res, next) => {
       if (!['POST', 'PUT', 'DELETE'].includes(req.method)) {
         return next();
@@ -33,19 +33,15 @@ class App {
   }
 
   initializeRoutes() {
-    this.app.use('/', mainRouter);
+    this.app.use('/', appRoutes);
   }
 
-  initializeResponseHandlers() {
-    this.app.use(successHandler);
-
-    this.app.use((req, res, next) => {
-      const error = new Error(`The requested URL ${req.originalUrl} was not found on this server.`);
-      error.statusCode = httpStatusCodes.CLIENT_ERROR.NOT_FOUND.code;
-      next(error);
-    });
-
-    this.app.use(errorHandler);
+  initializeErrorAndNotFoundHandlers() {
+    // These handlers are now part of AppController and applied via app.routes.js
+    // However, Express requires error handling middleware to be explicitly added last.
+    // The 404 handler should come before the global error handler.
+    this.app.use(AppController.handleNotFound);
+    this.app.use(AppController.handleError);
   }
 
   getApp() {
