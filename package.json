@@ -11,9 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "content-type": "^1.0.5",
     "dotenv": "^17.0.1",
-    "express": "^5.1.0",
-    "raw-body": "^3.0.0"
+    "express": "^5.1.0"
   }
 }
