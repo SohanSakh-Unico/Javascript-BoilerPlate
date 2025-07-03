@@ -1,7 +1,8 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const contentType = require('content-type');
 const getRawBody = require('raw-body');
-const mainRouter = require('./app.routes');
 const { successHandler, errorHandler } = require('./middlewares/responseHandlers');
 const httpStatusCodes = require('../utils/httpStatusCodes');
 
@@ -9,7 +10,7 @@ class App {
   constructor() {
     this.app = express();
     this.initializeMiddlewares();
-    this.initializeRoutes();
+    this.loadModules();
     this.initializeResponseHandlers();
   }
 
@@ -32,8 +33,29 @@ class App {
     });
   }
 
-  initializeRoutes() {
-    this.app.use('/', mainRouter);
+  loadModules() {
+    const modulesPath = path.join(__dirname, '..', 'modules');
+    fs.readdirSync(modulesPath).forEach(moduleName => {
+      const modulePath = path.join(modulesPath, moduleName);
+      if (fs.statSync(modulePath).isDirectory()) {
+        fs.readdirSync(modulePath).forEach(versionName => {
+          const versionPath = path.join(modulePath, versionName);
+          if (fs.statSync(versionPath).isDirectory() && versionName.match(/^v[0-9]+$/)) {
+            const routesPath = path.join(versionPath, 'routes');
+            if (fs.existsSync(routesPath)) {
+              fs.readdirSync(routesPath).forEach(file => {
+                if (file.endsWith('.js')) {
+                  const route = require(path.join(routesPath, file));
+                  const apiPrefix = `/api/${versionName}/${moduleName}`;
+                  this.app.use(apiPrefix, route);
+                  console.log(`Loaded routes from ${moduleName} (${versionName}) at ${apiPrefix}`);
+                }
+              });
+            }
+          }
+        });
+      }
+    });
   }
 
   initializeResponseHandlers() {
@@ -54,3 +76,5 @@ class App {
 }
 
 module.exports = App;
+
+
