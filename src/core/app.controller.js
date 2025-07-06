@@ -1,5 +1,6 @@
 const ApiResponse = require('./lib/utils/ApiResponse');
 const httpStatusCodes = require('./lib/constants/httpStatusCodes');
+const httpStatusMap = require('./lib/utils/httpStatusMap');
 
 /**
  * Global application controller for initial request processing and final response formatting.
@@ -23,12 +24,11 @@ class AppController {
    * @param {import('express').Request} req - The Express request object.
    * @param {import('express').Response} res - The Express response object.
    */
-  static getRoot(req, res) {
+  static getRoot(req, res, next) {
     // This will be caught by the responseFormatter to ensure ApiResponse format
     res.locals.data = { message: 'Welcome to the Boilerplate API!', globalProperty: req.globalProperty };
     res.locals.statusCode = httpStatusCodes.SUCCESS.OK.code;
     res.locals.message = httpStatusCodes.SUCCESS.OK.message;
-    res.status(res.locals.statusCode);
     next(); // Pass to the next middleware (responseFormatter)
   }
 
@@ -40,13 +40,22 @@ class AppController {
    * @param {import('express').NextFunction} next - The Express next middleware function.
    */
   static formatResponse(req, res, next) {
-    if (res.locals.data) {
+    // Only format a response if a controller has explicitly handled the request.
+    if (res.locals.isHandled) {
+      // Determine the final status code first.
       const statusCode = res.locals.statusCode || httpStatusCodes.SUCCESS.OK.code;
-      const message = res.locals.message || httpStatusCodes.SUCCESS.OK.message;
-      const response = new ApiResponse(statusCode, message, res.locals.data, req.originalUrl);
+      
+      // Now, derive the default message from the final status code.
+      const defaultMessage = (httpStatusMap[statusCode] && httpStatusMap[statusCode].message) || 'Success';
+      const message = res.locals.message || defaultMessage;
+
+      // Ensure data is at least null if not provided, for consistency.
+      const data = res.locals.data !== undefined ? res.locals.data : null;
+      
+      const response = new ApiResponse(statusCode, message, data, req.originalUrl);
       return res.status(response.statusCode).json(response);
     }
-    next(); // If no data in res.locals, pass to next (e.g., 404 handler)
+    next(); // If not handled, pass to the next middleware (e.g., 404 handler)
   }
 
   /**
@@ -84,3 +93,4 @@ class AppController {
 }
 
 module.exports = AppController;
+

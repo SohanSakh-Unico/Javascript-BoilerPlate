@@ -1,32 +1,58 @@
 const express = require('express');
 const router = express.Router();
-const asyncHandler = require('../../../../src/core/lib/middlewares/asyncHandler');
-const ApiError = require('../../../../src/core/ApiError');
-const httpStatusCodes = require('../../../../src/core/lib/constants/httpStatusCodes');
+const httpStatusCodes = require('../../../../core/lib/constants/httpStatusCodes');
 
-// A "dumb" controller that only knows about its own business logic.
-const getUser = (req, res, next) => {
-  const user = { id: 1, name: 'John Doe', globalProperty: req.globalProperty };
-  // Set data and status code in res.locals for AppController.formatResponse
-  res.locals.data = user;
-  res.locals.statusCode = httpStatusCodes.SUCCESS.OK.code;
-  next(); // Pass to AppController.formatResponse
+// --- "Dumb" Controllers ---
+
+const getUser = async (req) => {
+  return { id: 1, name: 'John Doe' };
 };
 
-// A controller that throws a generic error with a suggested status code.
-const getClientError = (req, res, next) => {
-  throw new ApiError(httpStatusCodes.CLIENT_ERROR.BAD_REQUEST.code, 'This is a simulated bad request.');
+const createUser = async (req) => {
+  return {
+    data: { id: 2, ...req.body },
+    statusCode: httpStatusCodes.SUCCESS.CREATED.code,
+    message: 'User created successfully'
+  };
 };
 
-// A controller that throws an unexpected error.
-const getServerError = (req, res, next) => {
-  // This will be caught by the asyncHandler and result in a 500.
+const getNullDataWithCustomMessage = async (req) => {
+  // The contract: .data key exists, so this is a descriptor.
+  return {
+    data: null,
+    message: 'No user data is available, but the request was successful.'
+  };
+};
+
+const getMessageOnly = async (req) => {
+  // The contract: .data key does NOT exist, so this is the data payload.
+  return {
+    message: 'This is a message object, not a response descriptor.'
+  };
+};
+
+const getClientError = async (req) => {
+  const error = new Error('This is a simulated bad request.');
+  error.statusCode = httpStatusCodes.CLIENT_ERROR.BAD_REQUEST.code;
+  throw error;
+};
+
+const getServerError = async (req) => {
   return someUndefinedVariable + 10;
 };
 
+
 // --- Routes ---
-router.get('/', asyncHandler(getUser));
-router.get('/client-error', asyncHandler(getClientError));
-router.get('/server-error', asyncHandler(getServerError));
+router.get('/', getUser);
+router.post('/', createUser);
+router.get('/null-data', getNullDataWithCustomMessage);
+router.get('/message-only', getMessageOnly);
+router.get('/client-error', getClientError);
+router.get('/server-error', getServerError);
 
 module.exports = router;
+
+
+
+
+

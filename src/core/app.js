@@ -15,21 +15,21 @@ class App {
   initializeMiddlewares() {
     this.app.use(express.json({ limit: '1mb' }));
 
-    // Global raw body parser for POST/PUT/DELETE requests
-    this.app.use((req, res, next) => {
-      if (!['POST', 'PUT', 'DELETE'].includes(req.method)) {
-        return next();
-      }
-      getRawBody(req, {
-        length: req.headers['content-length'],
-        limit: '1mb',
-        encoding: contentType.parse(req).parameters.charset
-      }, (err, string) => {
-        if (err) return next(err);
-        req.rawBody = string;
-        next();
-      });
-    });
+    // // Global raw body parser for POST/PUT/DELETE requests
+    // this.app.use((req, res, next) => {
+    //   if (!['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    //     return next();
+    //   }
+    //   getRawBody(req, {
+    //     length: req.headers['content-length'],
+    //     limit: '1mb',
+    //     encoding: contentType.parse(req).parameters.charset
+    //   }, (err, string) => {
+    //     if (err) return next(err);
+    //     req.rawBody = string;
+    //     next();
+    //   });
+    // });
   }
 
   initializeRoutes() {

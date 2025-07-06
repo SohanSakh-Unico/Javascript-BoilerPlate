@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const AppController = require('./app.controller');
+const asyncController = require('./lib/middlewares/asyncController');
 
 // Global request filtering/middleware at the app level
 router.use(AppController.filterRequest);
@@ -28,6 +29,16 @@ const loadModuleRoutes = () => {
             fs.readdirSync(routesDirPath).forEach(file => {
               if (file.endsWith('.js')) {
                 const moduleRouter = require(path.join(routesDirPath, file));
+                
+                // Dynamically wrap all route handlers in the module's router with asyncController
+                moduleRouter.stack.forEach(layer => {
+                  if (layer.route) {
+                    layer.route.stack.forEach(routeLayer => {
+                      routeLayer.handle = asyncController(routeLayer.handle);
+                    });
+                  }
+                });
+
                 const apiPrefix = `/api/${versionName}/${moduleName}`;
                 router.use(apiPrefix, moduleRouter);
                 console.log(`Loaded routes from ${moduleName} (${versionName}) file: ${file} at ${apiPrefix}`);
@@ -47,3 +58,4 @@ loadModuleRoutes();
 router.use(AppController.formatResponse);
 
 module.exports = router;
+
