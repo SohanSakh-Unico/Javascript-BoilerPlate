@@ -17,17 +17,27 @@ const asyncController = (controller) => async (req, res, next) => {
     // The controller handled the request. Set the flag.
     res.locals.isHandled = true;
 
+    let data = null;
+    let statusCode = null;
+    let message = null;
     // The contract: An object is a response descriptor if it has a .data property.
     // if (typeof result === 'object' && result !== null && Object.prototype.hasOwnProperty.call(result, 'data')) {
-    if (typeof result === 'object' && result !== null) {
-      // It's a descriptor. Use its properties.
-      res.locals.data = result.data || null; // Ensure data is at least null if not provided
-      res.locals.statusCode = result.statusCode || 200; // Default to 200 OK if not specified
-      res.locals.message = result.message;
+    const isDescriptorObject =
+      typeof result === 'object' &&
+      result !== null &&
+      !Array.isArray(result) &&
+      ('data' in result || 'statusCode' in result || 'message' in result);
+
+    if (isDescriptorObject) {
+      data = 'data' in result ? result.data : null;
+      statusCode = result.statusCode || null;
+      message = result.message || null;
     } else {
-      // It's not a descriptor, so the entire result is the data payload.
-      res.locals.data = result;
+      data = result;
     }
+    res.locals.data = data;
+    res.locals.statusCode = statusCode;
+    res.locals.message = message;
 
     return next();
   } catch (error) {

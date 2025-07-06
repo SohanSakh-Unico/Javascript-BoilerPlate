@@ -16,6 +16,10 @@ const createUser = async (req) => {
   };
 };
 
+const getArrayofUsers = async (req) => { 
+  return [1,2,3,4,5]
+}
+
 const getNullDataWithCustomMessage = async (req) => {
   // The contract: .data key exists, so this is a descriptor.
   return {
@@ -23,6 +27,20 @@ const getNullDataWithCustomMessage = async (req) => {
     message: 'No user data is available, but the request was successful.'
   };
 };
+
+const getCustomMessageStatusCode = async (req) => {
+  // The contract: .data key exists, so this is a descriptor.
+  return {
+    statusCode: 505,
+    message: 'No user data is available, but the request was successful.'
+  };
+};
+
+const getStatusCode = async (req) => {
+  return {
+    statusCode: 404
+  }
+}
 
 const getMessageOnly = async (req) => {
   // The contract: .data key does NOT exist, so this is the data payload.
@@ -45,7 +63,10 @@ const getServerError = async (req) => {
 // --- Routes ---
 router.get('/', getUser);
 router.post('/', createUser);
+router.get('/only-status', getStatusCode);
+router.get('/message-status', getCustomMessageStatusCode)
 router.get('/null-data', getNullDataWithCustomMessage);
+router.get('/user-array', getArrayofUsers);
 router.get('/message-only', getMessageOnly);
 router.get('/client-error', getClientError);
 router.get('/server-error', getServerError);
