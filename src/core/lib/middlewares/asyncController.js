@@ -26,10 +26,14 @@ const asyncController = (controller) => async (req, res, next) => {
       typeof result === 'object' &&
       result !== null &&
       !Array.isArray(result) &&
-      ('data' in result || 'statusCode' in result || 'message' in result);
+      (
+        Object.prototype.hasOwnProperty.call(result, 'statusCode') ||
+        Object.prototype.hasOwnProperty.call(result, 'data') ||
+        Object.prototype.hasOwnProperty.call(result, 'message')
+      );
 
     if (isDescriptorObject) {
-      data = 'data' in result ? result.data : null;
+      data = Object.prototype.hasOwnProperty.call(result, 'data') ? result.data : null;
       statusCode = result.statusCode || null;
       message = result.message || null;
     } else {

@@ -1,4 +1,3 @@
-const config = require('../../../config');
 const httpStatusMap = require('./httpStatusMap');
 
 class ApiResponse {
@@ -12,7 +11,7 @@ class ApiResponse {
     this.message = message || statusDetails.message;
     this.data = data;
 
-    if (config.env !== 'production' && developer_message) {
+    if (developer_message) {
       this.developer = developer_message;
     }
   }

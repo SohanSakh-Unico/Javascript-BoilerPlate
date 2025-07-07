@@ -1,3 +1,4 @@
+const config = require('../config');
 const ApiResponse = require('./lib/utils/ApiResponse');
 const httpStatusCodes = require('./lib/constants/httpStatusCodes');
 const httpStatusMap = require('./lib/utils/httpStatusMap');
@@ -70,9 +71,14 @@ class AppController {
 
     const statusCode = err.statusCode || httpStatusCodes.SERVER_ERROR.INTERNAL_SERVER_ERROR.code;
     const message = err.message || httpStatusCodes.SERVER_ERROR.INTERNAL_SERVER_ERROR.message;
-    const developer_message = {
-      stack: err.stack,
-    };
+
+    let developer_message = null;
+    // Only include developer details if not in a production environment
+    if (config.env !== 'production') {
+      developer_message = {
+        stack: err.stack,
+      };
+    }
 
     const response = new ApiResponse(statusCode, message, null, req.originalUrl, developer_message);
 
